@@ -69,7 +69,8 @@
 
     <script>
         const slides = [
-            { file: 'cortex-hydra-slides-2025-03-14.html', title: 'Cortex Hydra Slides (2025-03-14)', date: '2025-03-14' },\n            { file: 'cortex-hydra-slides-2026-03-14.html', title: 'Cortex Hydra Slides (2026-03-14)', date: '2026-03-14' }
+            { file: 'cortex-hydra-slides-2025-03-14.html', title: "Cortex Hydra Slides (2025-03-14)", date: '2025-03-14' },
+            { file: 'cortex-hydra-slides-2026-03-14.html', title: "Cortex Hydra Slides (2026-03-14)", date: '2026-03-14' }
         ];
 
         const list = document.getElementById('slidesList');
@@ -82,10 +83,8 @@
                 const card = document.createElement('a');
                 card.href = slide.file;
                 card.className = 'slide-card';
-                card.innerHTML = `
-                    <div class="slide-title"\u003e${slide.title}</div\u003e
-                    <div class="slide-date">📅 ${slide.date}</div\u003e
-                `;
+                card.innerHTML = '<div class="slide-title">' + slide.title + '</div>' +
+                    '<div class="slide-date">📅 ' + slide.date + '</div>';
                 list.appendChild(card);
             });
         }

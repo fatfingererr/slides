@@ -18,29 +18,8 @@ fi
 # Auto-update index.html with current slides
 echo "📝 Updating index.html..."
 
-# Generate slides array from existing HTML files
-SLIDES_ARRAY=""
-for file in *.html; do
-    [ "$file" = "index.html" ] && continue
-    
-    # Extract date from filename (assumes format: *-slides-YYYY-MM-DD.html)
-    date=$(echo "$file" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || echo "")
-    
-    # Generate title from filename
-    title=$(echo "$file" | sed 's/-slides-.*//; s/-/ /g; s/.html$//')
-    title=$(echo "$title" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2));}1')
-    [ -n "$date" ] && title="$title Slides ($date)"
-    
-    # Add to array
-    if [ -z "$SLIDES_ARRAY" ]; then
-        SLIDES_ARRAY="{ file: '$file', title: '$title', date: '$date' }"
-    else
-        SLIDES_ARRAY="$SLIDES_ARRAY,\n            { file: '$file', title: '$title', date: '$date' }"
-    fi
-done
-
-# Create new index.html with updated slides array
-cat > index.html << EOF
+# Start building the HTML
+cat > index.html << 'HEAD'
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -111,9 +90,37 @@ cat > index.html << EOF
     </div>
 
     <script>
-        const slides = [
-            $SLIDES_ARRAY
-        ];
+HEAD
+
+# Generate slides array
+slide_count=0
+echo "        const slides = [" >> index.html
+
+for file in *.html; do
+    [ "$file" = "index.html" ] && continue
+    
+    # Extract date from filename
+    date=$(echo "$file" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || echo "")
+    
+    # Generate title
+    title=$(echo "$file" | sed 's/-slides-.*//; s/-/ /g; s/.html$//')
+    title=$(echo "$title" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2));}1')
+    [ -n "$date" ] && title="$title Slides ($date)"
+    
+    # Add comma for all but first
+    if [ $slide_count -gt 0 ]; then
+        echo "," >> index.html
+    fi
+    
+    echo -n "            { file: '$file', title: \"$title\", date: '$date' }" >> index.html
+    slide_count=$((slide_count + 1))
+done
+
+echo "" >> index.html
+echo "        ];" >> index.html
+
+# Add the rest of the HTML
+cat >> index.html << 'TAIL'
 
         const list = document.getElementById('slidesList');
         
@@ -125,19 +132,17 @@ cat > index.html << EOF
                 const card = document.createElement('a');
                 card.href = slide.file;
                 card.className = 'slide-card';
-                card.innerHTML = \`
-                    <div class="slide-title"\u003e\${slide.title}</div\u003e
-                    <div class="slide-date">📅 \${slide.date}</div\u003e
-                \`;
+                card.innerHTML = '<div class="slide-title">' + slide.title + '</div>' +
+                    '<div class="slide-date">📅 ' + slide.date + '</div>';
                 list.appendChild(card);
             });
         }
     </script>
 </body>
 </html>
-EOF
+TAIL
 
-echo "✅ index.html updated with $(echo "$SLIDES_ARRAY" | tr ',' '\n' | wc -l) slides"
+echo "✅ index.html updated with $slide_count slides"
 
 # Add all changes
 git add -A
@@ -151,7 +156,7 @@ fi
 # Commit with fixed message
 git commit -m "$COMMIT_MSG"
 
-# Push to GitHub using SSH (no token needed if SSH key is configured)
+# Push to GitHub using SSH
 git push origin HEAD:main
 
 echo "✅ Slides pushed successfully!"
