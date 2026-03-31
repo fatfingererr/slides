@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harness Engineering：從理論到實踐的系統演化之路</title>
+  <style>
+    :root {
+      --bg-primary: #fafaf9;
+      --bg-secondary: #f5f5f4;
+      --text-primary: #451a03;
+      --text-secondary: #78716c;
+      --accent-primary: #92400e;
+      --accent-secondary: #1e3a8a;
+      --slide-width: 1280px;
+      --slide-height: 720px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { 
+      height: 100%; 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+    .slides-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .slide {
+      width: var(--slide-width);
+      height: var(--slide-height);
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 50px 70px;
+      display: none;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+    }
+    .slide.active { display: flex; }
+    .pagination {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      z-index: 100;
+      flex-wrap: wrap;
+      max-width: 90vw;
+      justify-content: center;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      opacity: 0.3;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .dot.active { opacity: 1; background: var(--accent-primary); }
+    .nav-btn {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 45px;
+      height: 45px;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent-primary);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+      z-index: 100;
+    }
+    .nav-btn:hover { opacity: 1; }
+    .nav-btn.prev { left: 25px; }
+    .nav-btn.next { right: 25px; }
+    .slide-number {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      opacity: 0.6;
+    }
+    .slide-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 38px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.3;
+      color: var(--text-primary);
+    }
+    .slide-subtitle {
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-bottom: 25px;
+      line-height: 1.5;
+    }
+    .slide-content {
+      font-size: 22px;
+      line-height: 1.6;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .slide-content ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .slide-content li {
+      padding: 10px 0;
+      padding-left: 32px;
+      position: relative;
+    }
+    .slide-content li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent-primary);
+      font-weight: bold;
+      font-size: 24px;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+    .column h3 {
+      font-size: 24px;
+      color: var(--accent-primary);
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--accent-primary);
+      padding-bottom: 8px;
+    }
+    .highlight-box {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border-left: 4px solid var(--accent-primary);
+      padding: 18px 22px;
+      border-radius: 8px;
+      margin: 18px 0;
+    }
+    .quote-box {
+      background: #e0f2fe;
+      border-left: 4px solid var(--accent-secondary);
+      padding: 18px 22px;
+      border-radius: 8px;
+      margin: 18px 0;
+      font-style: italic;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-top: 25px;
+    }
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      font-family: Georgia, serif;
+    }
+    .stat-label {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 18px;
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #d6d3d1;
+    }
+    .comparison-table th {
+      background: var(--accent-primary);
+      color: white;
+      font-weight: 600;
+    }
+    @media (max-width: 1320px) {
+      .slide { width: 100%; height: auto; min-height: 600px; padding: 35px; }
+      .slide-title { font-size: 30px; }
+      .slide-content { font-size: 18px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .two-column { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="slides-container">
+    <!-- Slide 1: 封面 -->
+    <div class="slide active" data-slide="1">
+      <span class="slide-number">1/55</span>
+      <h1 class="slide-title" style="font-size: 48px; margin-top: 60px; text-align: center;">Harness Engineering</h1>
+      <p class="slide-subtitle" style="font-size: 26px; text-align: center;">從理論到實踐的系統演化之路</p>
+      <p style="text-align: center; font-size: 20px; color: var(--text-secondary); margin-top: 40px;">借鑑全球前沿實踐，構建適配自身的 AI Agent 系統工程方法論</p>
+      <div style="text-align: center; margin-top: auto; color: var(--text-secondary);">
+        <p>OpenClaw 個人工作區實踐報告</p>
+        <p>2025年3月</p>
+      </div>
+    </div>
+
+    <!-- Slide 2: 目錄 -->
+    <div class="slide" data-slide="2">
+      <span class="slide-number">2/55</span>
+      <h2 class="slide-title">目錄</h2>
+      <div class="slide-content">
+        <div class="two-column">
+          <div class="column">
+            <h3>理論篇</h3>
+            <ul>
+              <li>什麼是 Harness Engineering？</li>
+              <li>Meta-Harness：端到端優化</li>
+              <li>語義化路徑與分層架構</li>
+              <li>自演化 Agent 系統</li>
+              <li>上下文工程與記憶管理</li>
+            </ul>
+          </div>
+          <div class="column">
+            <h3>實踐篇</h3>
+            <ul>
+              <li>系統現狀與挑戰分析</li>
+              <li>借鑑與調整的方法論</li>
+              <li>核心工具與技能構建</li>
+              <li>量化成果與指標</li>
+              <li>經驗總結與未來規劃</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 引言 -->
+    <div class="slide" data-slide="3">
+      <span class="slide-number">3/55</span>
+      <h2 class="slide-title">為什麼需要 Harness Engineering？</h2>
+      <div class="slide-content">
+        <div class="quote-box">"改變 Harness 可使同一模型在相同基準上產生 6 倍性能差距。"<br>—— Meta-Harness 論文</div>
+        <ul>
+          <li>模型權重並非唯一決定因素，<strong>如何組織信息</strong>同樣關鍵</li>
+          <li>隨著系統規模增長（150+ skills、100+ memory 文件），手動管理不可持續</li>
+          <li>需要系統化的方法來約束、評估和優化 Agent 行為</li>
+          <li>從「提示工程」進化到「上下文工程」，再到「系統工程」</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 4: Harness Engineering 定義 -->
+    <div class="slide" data-slide="4">
+      <span class="slide-number">4/55</span>
+      <h2 class="slide-title">Harness Engineering 的定義</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          <strong>Harness（套架）</strong>：決定模型看到什麼信息的代碼——包括存儲、檢索和呈現的邏輯。
+        </div>
+        <ul>
+          <li><strong>不是</strong>模型訓練，而是圍繞模型的「 scaffolding 」</li>
+          <li><strong>不是</strong>單一提示詞，而是完整的可執行程序</li>
+          <li><strong>包含</strong>：上下文管理、工具調用、狀態更新、錯誤處理</li>
+          <li><strong>目標</strong>：讓固定模型在特定任務上表現最優</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 5: 研究來源總覽 -->
+    <div class="slide" data-slide="5">
+      <span class="slide-number">5/55</span>
+      <h2 class="slide-title">我們的研究來源</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>來源</th><th>機構/作者</th><th>核心貢獻</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Meta-Harness</td><td>Stanford, MIT</td><td>端到端 Harness 優化，文件系統作為記憶</td></tr>
+            <tr><td>Harness Engineering</td><td>卡颂</td><td>語義化路徑、分層架構、機械化約束</td></tr>
+            <tr><td>Hermes Agent</td><td>Nous Research</td><td>自演化循環、技能自動生成</td></tr>
+            <tr><td>Yoyo-Evolve</td><td>開源項目</td><td>每日記憶合成、自主代碼演化</td></tr>
+            <tr><td>12-Factor Agents</td><td>HumanLayer</td><td>Agent 即軟件、微 Agent 模式</td></tr>
+            <tr><td>Context Engineering</td><td>Anthropic, Manus</td><td>KV-Cache 優化、漸進式披露</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 6: Meta-Harness 核心思想 -->
+    <div class="slide" data-slide="6">
+      <span class="slide-number">6/55</span>
+      <h2 class="slide-title">Meta-Harness：端到端優化</h2>
+      <div class="slide-content">
+        <div class="highlight-box">傳統方法：僅從壓縮摘要（標量分數）學習<br>Meta-Harness：讓 Coding Agent 直接閱讀完整執行歷史</div>
+        <ul>
+          <li>每輪訪問 <strong>10M tokens</strong> 診斷信息（傳統方法僅 2K-30K）</li>
+          <li>通過 grep/cat 選擇性檢查，而非打包成單一提示</li>
+          <li>Coding Agent 自主決定查看什麼、如何修改</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 7: Meta-Harness 成果 -->
+    <div class="slide" data-slide="7">
+      <span class="slide-number">7/55</span>
+      <h2 class="slide-title">Meta-Harness 的實證成果</h2>
+      <div class="slide-content">
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card"><div class="stat-number">+7.7</div><div class="stat-label">準確率提升<br>文本分類任務</div></div>
+          <div class="stat-card"><div class="stat-number">4×</div><div class="stat-label">更少 Token<br>使用效率</div></div>
+          <div class="stat-card"><div class="stat-number">#1</div><div class="stat-label">TerminalBench-2<br>排名</div></div>
+        </div>
+        <div class="highlight-box" style="margin-top: 25px;">
+          <strong>關鍵洞察</strong>：僅需 4 次評估即可達到其他方法 60 次評估的效果。證明<strong>豐富的歷史訪問</strong>比<strong>壓縮反饋</strong>更有效。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: 卡颂的 Harness Engineering -->
+    <div class="slide" data-slide="8">
+      <span class="slide-number">8/55</span>
+      <h2 class="slide-title">語義化路徑與分層架構</h2>
+      <div class="slide-content">
+        <div class="two-column">
+          <div class="column">
+            <h3>語義化路徑</h3>
+            <ul>
+              <li>❌ <code>utils/helpers.ts</code></li>
+              <li>✅ <code>billing/invoices/compute.ts</code></li>
+              <li>Agent 最常使用的命令是 <code>ls</code></li>
+              <li>路徑本身就是文檔</li>
+            </ul>
+          </div>
+          <div class="column">
+            <h3>單向依賴分層</h3>
+            <ul>
+              <li>Types → Config → Repo</li>
+              <li>Repo → Service → Runtime</li>
+              <li>Runtime → UI</li>
+            </ul>
+          </div>
+        </div>
+        <div class="quote-box" style="margin-top: 20px;">約束創造自由——通過 AGENTS.md 規範 + linter/test 閘門 + 定期自動審查實現機械化執行。</div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Hermes Agent 生態 -->
+    <div class="slide" data-slide="9">
+      <span class="slide-number">9/55</span>
+      <h2 class="slide-title">Hermes Agent：自演化系統</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>學習循環</strong>：從經驗中自動創建技能</li>
+          <li><strong>多平台網關</strong>：統一接口對接各種渠道</li>
+          <li><strong>Cron 調度</strong>：內置任務排程機制</li>
+          <li><strong>MCP 協議</strong>：標準化工具調用</li>
+        </ul>
+        <div class="highlight-box">
+          <strong>hermes-dojo</strong>：自我改進循環 — 監控會話 → 分析失敗 → 修復/演化弱技能 → 報告 → 長期追蹤
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Yoyo-Evolve -->
+    <div class="slide" data-slide="10">
+      <span class="slide-number">10/55</span>
+      <h2 class="slide-title">Yoyo-Evolve：自主代碼演化</h2>
+      <div class="slide-content">
+        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="stat-card"><div class="stat-number">31K</div><div class="stat-label">最終代碼行數</div></div>
+          <div class="stat-card"><div class="stat-number">200</div><div class="stat-label">初始代碼行數</div></div>
+          <div class="stat-card"><div class="stat-number">24</div><div class="stat-label">自主演化天數</div></div>
+          <div class="stat-card"><div class="stat-number">8h</div><div class="stat-label">每次改進週期</div></div>
+        </div>
+        <ul style="margin-top: 20px;">
+          <li>每日記憶合成：將執行歷史壓縮為可讀摘要</li>
+          <li>社會化學習：每 4 小時閱讀 GitHub Discussions</li>
+              <li>變異測試：通過 cargo-mutants 確保代碼健壯性</li>
+              <li>子 Agent 調度：為複雜任務生成專門 Agent</li>
+            </ul>
+          </div>
+        </div>
+
+    <!-- Slide 11: 12-Factor Agents -->
+    <div class="slide" data-slide="11">
+      <span class="slide-number">11/55</span>
+      <h2 class="slide-title">12-Factor Agents 原則</h2>
+      <div class="slide-content">
+        <div class="two-column">
+          <div class="column">
+            <h3>核心原則</h3>
+            <ul>
+              <li>Agent 即軟件，不只是「提示+工具+循環」</li>
+              <li>擁有自己的提示詞和上下文窗口</li>
+              <li>工具調用是結構化輸出</li>
+              <li>微 Agent 模式：小而專注</li>
+            </ul>
+          </div>
+          <div class="column">
+            <h3>與傳統對比</h3>
+            <ul>
+              <li>❌ 巨型萬能 Agent</li>
+              <li>✅ 多個專精 Agent 協作</li>
+              <li>❌ 動態工具選擇</li>
+              <li>✅ 明確的工具接口定義</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 12: Context Engineering -->
+    <div class="slide" data-slide="12">
+      <span class="slide-number">12/55</span>
+      <h2 class="slide-title">上下文工程：KV-Cache 優化</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          KV-Cache 命中率是生產環境的關鍵指標——10 倍成本差異的來源
+        </div>
+        <ul>
+          <li><strong>穩定前綴</strong>：保持系統提示詞結構一致，最大化緩存命中</li>
+          <li><strong>僅追加模式</strong>：避免在中間插入內容，導致緩存失效</li>
+          <li><strong>顯式斷點</strong>：用特殊標記分隔不同階段，便於選性加載</li>
+          <li><strong>工具掩碼</strong>：通過 logit 操作禁用工具，而非從上下文中移除</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 13: 文件系統即記憶 -->
+    <div class="slide" data-slide="13">
+      <span class="slide-number">13/55</span>
+      <h2 class="slide-title">文件系統即記憶</h2>
+      <div class="slide-content">
+        <div class="quote-box">
+          "當優化目標是完整可執行程序，且環境反饋分散在代碼、分數和執行軌跡中時，讓優化器直接閱讀原始數據比提供人工摘要更有效。"
+        </div>
+        <ul>
+          <li><strong>無限外部記憶</strong>：突破上下文窗口限制</li>
+          <li><strong>選擇性訪問</strong>：Agent 決定讀取什麼，而非被動接收</li>
+          <li><strong>持久化狀態</strong>：會話結束後信息仍保留</li>
+          <li><strong>結構化組織</strong>：L0 摘要 → L1 索引 → L2 詳細記錄</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 14: 漸進式披露 -->
+    <div class="slide" data-slide="14">
+      <span class="slide-number">14/55</span>
+      <h2 class="slide-title">漸進式披露與注意力管理</h2>
+      <div class="slide-content">
+        <div class="two-column">
+          <div class="column">
+            <h3>核心概念</h3>
+            <ul>
+              <li>上下文腐敗（Context Rot）</li>
+              <li>注意力預算（Attention Budget）</li>
+              <li>恰到好處的上下文檢索</li>
+              <li>結構化筆記（todo.md）</li>
+            </ul>
+          </div>
+          <div class="column">
+            <h3>實踐技巧</h3>
+            <ul>
+              <li>保留錯誤記錄（隱性學習）</li>
+              <li>避免少樣本漂移</li>
+              <li>定期壓縮與歸檔</li>
+              <li>子 Agent 架構</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 15: 理論小結 -->
+    <div class="slide" data-slide="15">
+      <span class="slide-number">15/55</span>
+      <h2 class="slide-title">理論篇小結：核心共識</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>主題</th><th>各方共識</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>約束優於提示</td><td>機械化規則 > 臨時指導</td></tr>
+            <tr><td>分層與模塊化</td><td>單向依賴、語義化組織</td></tr>
+            <tr><td>記憶管理</td><td>文件系統作為外部記憶、漸進式披露</td></tr>
+            <tr><td>自演化</td><td>從執行歷史中學習、自動改進</td></tr>
+            <tr><td>評估驅動</td><td>量化指標、循環優化</td></tr>
+            <tr><td>上下文工程</td><td>KV-Cache 優化、穩定結構</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 16: 分隔頁 - 實踐篇 -->
+    <div class="slide" data-slide="16">
+      <span class="slide-number">16/55</span>
+      <h1 class="slide-title" style="text-align: center; margin: auto;">實踐篇</h1>
+      <p style="text-align: center; font-size: 24px; color: var(--text-secondary);">從理論到 OpenClaw 系統的落地之路</p>
+    </div>
+
+    <!-- Slide 17: 系統現狀 -->
+    <div class="slide" data-slide="17">
+      <span class="slide-number">17/55</span>
+      <h2 class="slide-title">我們的系統現狀（改造前）</h2>
+      <div class="slide-content">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number">148</div><div class="stat-label">Skills</div></div>
+          <div class="stat-card"><div class="stat-number">145</div><div class="stat-label">Memory 文件</div></div>
+          <div class="stat-card"><div class="stat-number">42</div><div class="stat-label">MB 技能代碼</div></div>
+          <div class="stat-card"><div class="stat-number">30+</div><div class="stat-label">Cron Jobs</div></div>
+        </div>
+        <div class="highlight-box" style="margin-top: 20px;">
+          <strong>核心挑戰</strong>：規模增長帶來的複雜性——技能間依賴不清、文檔滯後、手動維護負擔重、缺乏統一評估標準。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 18: 問題診斷 -->
+    <div class="slide" data-slide="18">
+      <span class="slide-number">18/55</span>
+      <h2 class="slide-title">問題診斷：我們的痛點</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>語義化路徑缺失</strong>：存在 utils/, common/, temp/ 等模糊目錄</li>
+          <li><strong>分層架構不明</strong>：0% skills 有 layer 聲明，依賴方向混亂</li>
+          <li><strong>機械化約束不足</strong>：無強制閘門，靠人工審查</li>
+          <li><strong>記憶管理分散</strong>：缺乏統一的 L0-L3 架構執行</li>
+          <li><strong>評估體系缺失</strong>：無自動化 skill 健康度檢查</li>
+          <li><strong>上下文未優化</strong>：未考慮 KV-Cache 效率</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 19: 方法論調整 -->
+    <div class="slide" data-slide="19">
+      <span class="slide-number">19/55</span>
+      <h2 class="slide-title">我們的調整方法論</h2>
+      <div class="slide-content">
+        <div class="quote-box">
+          不是照搬，而是理解原理後，根據自身規模和資源約束做適配調整。
+        </div>
+        <table class="comparison-table">
+          <thead>
+            <tr><th>來源概念</th><th>我們的調整</th><th>原因</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Meta-Harness 的 10M tokens</td><td>聚焦結構化文件</td><td>個人系統無需如此大規模</td></tr>
+            <tr><td>Yoyo 的 8h 自動演化</td><td>Daily Synthesis + 手動觸發</td><td>保持人機協作平衡</td></tr>
+            <tr><td>Hermes 的全自動</td><td>半自動評估 + 人工確認</td><td>避免過度自動化風險</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 20: 實踐概覽 -->
+    <div class="slide" data-slide="20">
+      <span class="slide-number">20/55</span>
+      <h2 class="slide-title">實踐成果概覽</h2>
+      <div class="slide-content">
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card"><div class="stat-number">7</div><div class="stat-label">新建核心 Skills</div></div>
+          <div class="stat-card"><div class="stat-number">164</div><div class="stat-label">Skills 結構化</div></div>
+          <div class="stat-card"><div class="stat-number">100%</div><div class="stat-label">Memory 索引覆蓋</div></div>
+        </div>
+        <ul style="margin-top: 20px;">
+          <li><strong>check-harness-env</strong>：環境合規性檢查</li>
+          <li><strong>skill-checker</strong>：技能質量評估</li>
+          <li><strong>autoharness</strong>：迭代優化框架</li>
+          <li><strong>daily-synthesis</strong>：每日記憶合成</li>
+          <li><strong>capability-evolver</strong>：能力演化引擎</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 21: check-harness-env 介紹 -->
+    <div class="slide" data-slide="21">
+      <span class="slide-number">21/55</span>
+      <h2 class="slide-title">check-harness-env：環境合規檢查</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          借鑑卡颂的 Harness Engineering，建立機械化約束檢查工具
+        </div>
+        <ul>
+          <li><strong>語義化路徑檢查</strong>：掃描反模式（utils/, common/, temp/）</li>
+          <li><strong>分層聲明驗證</strong>：檢查 SKILL.md 是否包含 layer 欄位</li>
+          <li><strong>依賴方向分析</strong>：檢測跨層違規調用</li>
+          <li><strong>四維度評分</strong>：路徑 30%、分層 25%、依賴 25%、文檔 20%</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 22: check-harness-env 成果 -->
+    <div class="slide" data-slide="22">
+      <span class="slide-number">22/55</span>
+      <h2 class="slide-title">check-harness-env 檢測結果</h2>
+      <div class="slide-content">
+        <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+          <div class="stat-card"><div class="stat-number">5</div><div class="stat-label">語義化路徑問題</div></div>
+          <div class="stat-card"><div class="stat-number">0%</div><div class="stat-label">分層覆蓋率（改造前）</div></div>
+        </div>
+        <div class="highlight-box" style="margin-top: 20px;">
+          <strong>發現的問題</strong>：<br>
+          • 3 個 utils.js 文件位於非 venv 目錄<br>
+          • temp/ 目錄包含 80 個文件<br>
+          • tmp/ 目錄包含 22 個文件<br>
+          • 147 個 skills 無 layer 聲明
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 23: skill-checker 介紹 -->
+    <div class="slide" data-slide="23">
+      <span class="slide-number">23/55</span>
+      <h2 class="slide-title">skill-checker：技能質量評估</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          整合 lintlang 風格的靜態檢查 + hermes-dojo 風格的弱點檢測
+        </div>
+        <ul>
+          <li><strong>描述質量審查</strong>：觸發準確性、測試案例設計</li>
+          <li><strong>Config Linting</strong>：SKILL.md frontmatter 結構驗證</li>
+          <li><strong>弱點檢測</strong>：從 session logs 分析失敗模式</li>
+          <li><strong>依賴健康度</strong>：引用完整性檢查</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 24: skill-checker 工作流程 -->
+    <div class="slide" data-slide="24">
+      <span class="slide-number">24/55</span>
+      <h2 class="slide-title">skill-checker 工作流程</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>review-description</strong>：審查技能描述質量</li>
+          <li><strong>design-test-cases</strong>：設計測試用例</li>
+          <li><strong>diagnose-triggering</strong>：診斷觸發準確性</li>
+          <li><strong>full-evaluation</strong>：完整評估報告</li>
+        </ul>
+        <div class="quote-box">
+          從 skill-invocation-check 重命名為 skill-checker，標誌著從「觸發檢查」到「全面質量評估」的範式轉變。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 25: autoharness 介紹 -->
+    <div class="slide" data-slide="25">
+      <span class="slide-number">25/55</span>
+      <h2 class="slide-title">autoharness：迭代優化框架</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          基於 Meta-Harness 的「提出-評估-存儲」循環，適配個人工作區規模
+        </div>
+        <ul>
+          <li><strong>6 維度評分</strong>：結構、文檔、腳本、工作流、引用、安全</li>
+          <li><strong>基準測試</strong>：建立量化起點</li>
+          <li><strong>實驗循環</strong>：改動 → 評估 → 比較 → 決策</li>
+          <li><strong>變更日誌</strong>：記錄每次實驗的決策依據</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 26: autoharness 工作流程 -->
+    <div class="slide" data-slide="26">
+      <span class="slide-number">26/55</span>
+      <h2 class="slide-title">autoharness 核心循環</h2>
+      <div class="slide-content">
+        <ol style="font-size: 20px; line-height: 2;">
+          <li><strong>讀取</strong>：掃描 skill 當前狀態，提取結構信息</li>
+          <li><strong>建立評估</strong>：運行 6 維度評分，生成基準線</li>
+          <li><strong>實驗循環</strong>：
+            <ul style="margin-left: 30px; font-size: 18px;">
+              <li>提出改動假設</li>
+              <li>應用代碼變更</li>
+              <li>重新評估得分</li>
+              <li>與基準線比較</li>
+            </ul>
+          </li>
+          <li><strong>變更日誌</strong>：記錄改動內容、評分變化、決策理由</li>
+          <li><strong>交付</strong>：生成優化報告和修復建議</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Slide 27: autoharness 實踐成果 -->
+    <div class="slide" data-slide="27">
+      <span class="slide-number">27/55</span>
+      <h2 class="slide-title">autoharness 實踐成果</h2>
+      <div class="slide-content">
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card"><div class="stat-number">77</div><div class="stat-label">Broken References<br>（改造前）</div></div>
+          <div class="stat-card"><div class="stat-number">0</div><div class="stat-label">Broken References<br>（改造後）</div></div>
+          <div class="stat-card"><div class="stat-number">6/6</div><div class="stat-label">Self-Eval<br>得分</div></div>
+        </div>
+        <div class="highlight-box" style="margin-top: 20px;">
+          <strong>修復案例</strong>：context-loading-check、memory-indexer、skill-eval 等核心技能的引用鏈完整性已全部修復。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 28: daily-synthesis 介紹 -->
+    <div class="slide" data-slide="28">
+      <span class="slide-number">28/55</span>
+      <h2 class="slide-title">daily-synthesis：每日記憶合成</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          借鑑 Yoyo-Evolve 的每日記憶合成機制，構建主動上下文管理
+        </div>
+        <ul>
+          <li><strong>定時執行</strong>：每日 06:15 自動運行</li>
+          <li><strong>信息整合</strong>：memory 文件 + autoharness 日誌 + git commits</li>
+          <li><strong>輸出限制</strong>：~500 tokens，符合 KV-Cache 優化原則</li>
+          <li><strong>主動推送</strong>：Discord embed 通知，無需手動查閱</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 29: daily-synthesis 輸出格式 -->
+    <div class="slide" data-slide="29">
+      <span class="slide-number">29/55</span>
+      <h2 class="slide-title">daily-synthesis 輸出結構</h2>
+      <div class="slide-content">
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 16px;">
+          <strong>## 今日重點</strong><br>
+          • commit hash - 技能更新摘要<br>
+          • commit hash - 另一個更新<br><br>
+          <strong>## 技能更新</strong><br>
+          | Skill | 變更 | 狀態 |<br>
+          |-------|------|------|<br>
+          | skill-name | 變更描述 | ✅ |<br><br>
+          <strong>## 執行摘要</strong><br>
+          • 關鍵指標變化
+        </div>
+        <div class="quote-box" style="margin-top: 15px;">
+          輸出寫入 memory/active-context.md，作為 Session 啟動時的第一手上下文。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 30: dispatcher 優化 -->
+    <div class="slide" data-slide="30">
+      <span class="slide-number">30/55</span>
+      <h2 class="slide-title">Dispatcher：優先級驅動調度</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          借鑑 Hermes 的多 Agent 調度理念，強化 Redmine Issue 分派邏輯
+        </div>
+        <ul>
+          <li><strong>priority_id 欄位</strong>：從 Redmine API 解析優先級</li>
+          <li><strong>排序邏輯</strong>：(-priority_id, id) —— 高優先先執行</li>
+          <li><strong>父子任務</strong>：自動處理依賴鏈</li>
+          <li><strong>並發控制</strong>：max 8 個並行 session</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 31: capability-evolver -->
+    <div class="slide" data-slide="31">
+      <span class="slide-number">31/55</span>
+      <h2 class="slide-title">capability-evolver：三級演化</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>級別</th><th>觸發條件</th><th>行動</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>L1</strong> Tip</td><td>使用率低但有價值</td><td>記錄到 LEARNINGS.md</td></tr>
+            <tr><td><strong>L2</strong> Optimize</td><td>U&lt;0.5, n≥5</td><td>LLM 自動修改 skill</td></tr>
+            <tr><td><strong>L3</strong> Discover</td><td>U&lt;0.3, n≥10</td><td>重建 skill（需確認）</td></tr>
+          </tbody>
+        </table>
+        <div class="quote-box" style="margin-top: 15px;">
+          借鑑 Hermes-dojo 的自我改進循環，但加入人工確認閘門，避免過度自動化。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 32: 記憶系統分層 -->
+    <div class="slide" data-slide="32">
+      <span class="slide-number">32/55</span>
+      <h2 class="slide-title">記憶系統：L0-L3 架構</h2>
+      <div class="slide-content">
+        <div style="display: grid; gap: 10px;">
+          <div style="background: #fee2e2; padding: 15px; border-radius: 8px; border-left: 4px solid #dc2626;">
+            <strong>L0 Abstract</strong>（~100 tokens）- skills/{name}/memory/.abstract —— 快速查詢
+          </div>
+          <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <strong>L1 Index</strong>（~500 tokens）- memory/skills-index.md —— 分類瀏覽
+          </div>
+          <div style="background: #d1fae5; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+            <strong>L2 Detail</strong>（完整記錄）- memory/YYYY-MM-DD-*.md —— 深度研究
+          </div>
+          <div style="background: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <strong>L3 Archive</strong>（歷史查詢）- memory/archives/ —— 歷史追溯
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 33: P-Tag 系統 -->
+    <div class="slide" data-slide="33">
+      <span class="slide-number">33/55</span>
+      <h2 class="slide-title">P-Tag 系統：時間衰減管理</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>標籤</th><th>保留時間</th><th>用途</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>[P0]</td><td>永久</td><td>核心系統文檔、身份定義</td></tr>
+            <tr><td>[P1]</td><td>30天</td><td>重要決策、中期項目</td></tr>
+            <tr><td>[P2]</td><td>7天</td><td>臨時記錄、日常瑣事</td></tr>
+          </tbody>
+        </table>
+        <div class="highlight-box" style="margin-top: 15px;">
+          啟用 Temporal Decay：最終分數 = 語義分數 × (0.5 ^ (天數/30))<br>
+          確保近期記憶在搜索排序中獲得加權。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 34: AGENTS.md 重構 -->
+    <div class="slide" data-slide="34">
+      <span class="slide-number">34/55</span>
+      <h2 class="slide-title">AGENTS.md：從描述到導航</h2>
+      <div class="slide-content">
+        <div class="highlight-box">
+          借鑑「漸進式披露」原則，將 AGENTS.md 從冗長描述改造為結構化導航
+        </div>
+        <ul>
+          <li><strong>導航表格</strong>：要找什麼 → 去哪裡</li>
+          <li><strong>快速指令</strong>：常用任務的快捷路徑</li>
+          <li><strong>約束邊界</strong>：Scope 清晰劃分（什麼做、什麼不做）</li>
+          <li><strong>When Lost</strong>：快速定位指南</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 35: KV-Cache 優化實踐 -->
+    <div class="slide" data-slide="35">
+      <span class="slide-number">35/55</span>
+      <h2 class="slide-title">KV-Cache 優化實踐</h2>
+      <div class="slide-content">
+        <div class="two-column">
+          <div class="column">
+            <h3>優化前</h3>
+            <ul>
+              <li>動態時間戳插入</li>
+              <li>工具動態增刪</li>
+              <li>上下文順序不固定</li>
+            </ul>
+          </div>
+          <div class="column">
+            <h3>優化後</h3>
+            <ul>
+              <li>移除動態時間戳</li>
+              <li>工具掩碼而非移除</li>
+              <li>穩定文件加載順序</li>
+            </ul>
+          </div>
+        </div>
+        <div class="quote-box" style="margin-top: 15px;">
+          啟發來源：Manus Context Engineering 文章。<br>
+          效果：雖無法精確測量 KV-Cache 命中率，但理論上應有顯著提升。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 36: 量化成果 - 技能健康度 -->
+    <div class="slide" data-slide="36">
+      <span class="slide-number">36/55</span>
+      <h2 class="slide-title">量化成果：技能健康度</h2>
+      <div class="slide-content">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-number">0%</div><div class="stat-label">→ 4.3%</div></div>
+          <div class="stat-card"><div class="stat-number">0%</div><div class="stat-label">→ 3%</div></div>
+          <div class="stat-card"><div class="stat-number">77</div><div class="stat-label">→ 0</div></div>
+          <div class="stat-card"><div class="stat-number">95</div><div class="stat-label">健康分數</div></div>
+        </div>
+        <ul style="margin-top: 15px;">
+          <li>Layer 聲明覆蓋率：7/164 skills（持續提升中）</li>
+          <li>LEARNINGS.md 維護：5 skills（新機制）</li>
+          <li>Broken References：全部修復</li>
+          <li>Memory Index：100% 覆蓋率</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 37: 量化成果 - 系統規模 -->
+    <div class="slide" data-slide="37">
+      <span class="slide-number">37/55</span>
+      <h2 class="slide-title">量化成果：系統規模增長</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>指標</th><th>改造前</th><th>改造後</th><th>變化</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Skills 數量</td><td>148</td><td>164</td><td>+16</td></tr>
+            <tr><td>Memory 文件</td><td>~120</td><td>145</td><td>+25</td></tr>
+            <tr><td>結構化 Skills</td><td>~45 (31%)</td><td>~80+</td><td>+35</td></tr>
+            <tr><td>Cron Jobs</td><td>25</td><td>30</td><td>+5</td></tr>
+          </tbody>
+        </table>
+        <div class="highlight-box" style="margin-top: 15px;">
+          規模增長的同時，結構化比例提升，系統可維護性增強而非減弱。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 38: 量化成果 - 自動化提升 -->
+    <div class="slide" data-slide="38">
+      <span class="slide-number">38/55</span>
+      <h2 class="slide-title">量化成果：自動化程度</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>Daily Synthesis</strong>：每日自動生成，覆蓋率 100%</li>
+          <li><strong>Backup 驗證</strong>：雙端一致性 100%，成功率 >95%</li>
+          <li><strong>Memory Index</strong>：實時同步，延遲 < 1 小時</li>
+          <li><strong>Cron Health</strong>：30 個 jobs 監控，異常自動告警</li>
+          <li><strong>Evolver</strong>：每日 23:00 自動分析，生成改進建議</li>
+        </ul>
+        <div class="quote-box">
+          目標：讓系統在無人工干預的情況下，自我維護、自我優化。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 39: 經驗總結 - 什麼有效 -->
+    <div class="slide" data-slide="39">
+      <span class="slide-number">39/55</span>
+      <h2 class="slide-title">經驗總結：什麼有效</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>機械化約束</strong>：比文檔約束更可靠，check-harness-env 的掃描確實發現了隱藏問題</li>
+          <li><strong>量化評估</strong>：6 維度評分讓優化有明確方向，避免盲目改動</li>
+          <li><strong>每日合成</strong>：active-context.md 成為 Session 啟動的錨點，顯著提升連續性</li>
+          <li><strong>分層記憶</strong>：L0-L3 架構讓信息查找效率提升，不再「丟失」在記憶中</li>
+          <li><strong>優先級調度</strong>：dispatcher 的排序改進讓高優先任務得到及時處理</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 40: 經驗總結 - 調整與妥協 -->
+    <div class="slide" data-slide="40">
+      <span class="slide-number">40/55</span>
+      <h2 class="slide-title">經驗總結：調整與妥協</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>理想</th><th>現實</th><th>調整</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>全自動演化</td><td>資源與風險限制</td><td>半自動 + 人工確認</td></tr>
+            <tr><td>100% 分層覆蓋</td><td>歷史遺留技能多</td><td>增量改進，優先核心</td></tr>
+            <tr><td>10M tokens 歷史</td><td>個人系統規模小</td><td>聚焦結構化文件</td></tr>
+            <tr><td>實時 KV-Cache 監控</td><td>缺乏工具鏈</td><td>遵循最佳實踐原則</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 41: 關鍵洞察 -->
+    <div class="slide" data-slide="41">
+      <span class="slide-number">41/55</span>
+      <h2 class="slide-title">關鍵洞察</h2>
+      <div class="slide-content">
+        <div class="quote-box" style="font-size: 24px;">
+          「約束創造自由」——這不僅是架構設計原則，更是認知負載管理策略。
+        </div>
+        <ul>
+          <li>清晰的約束讓 Agent（和人）減少決策疲勞</li>
+          <li>結構化的信息組織比「智能」檢索更可靠</li>
+          <li>持續的小改進優於間歇性的大重構</li>
+          <li>評估驅動的開發讓進步可見、可量化</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 42: 未來規劃 - 短期 -->
+    <div class="slide" data-slide="42">
+      <span class="slide-number">42/55</span>
+      <h2 class="slide-title">未來規劃：短期（1-3 月）</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>Layer 覆蓋率提升</strong>：從 4.3% 提升到 50%+</li>
+          <li><strong>Doc-gardener Skill</strong>：自動檢測過時文檔、broken links</li>
+          <li><strong>Pre-commit Linter</strong>：layer 依賴違規自動攔截</li>
+          <li><strong>統一 Benchmark</strong>：6 維度系統級評估</li>
+        </ul>
+        <div class="highlight-box">
+          目標：讓「約束」從建議變為強制，從人工變為自動。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 43: 未來規劃 - 中期 -->
+    <div class="slide" data-slide="43">
+      <span class="slide-number">43/55</span>
+      <h2 class="slide-title">未來規劃：中期（3-6 月）</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>Session Initializer</strong>：基於 active-context 的智能預熱</li>
+          <li><strong>Agent-to-Agent Review</strong>：讓 skill-checker 審查 autoharness 輸出</li>
+          <li><strong>Golden Principles</strong>：編碼核心原則，自動清理技術債務</li>
+          <li><strong>瀏覽器整合驗證</strong>：用 agent-browser 做端到端測試</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Slide 44: 未來規劃 - 長期 -->
+    <div class="slide" data-slide="44">
+      <span class="slide-number">44/55</span>
+      <h2 class="slide-title">未來規劃：長期（6-12 月）</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>真正的 Self-Evolution</strong>：在安全沙箱中自動修改、測試、部署</li>
+          <li><strong>Multi-Agent 協作</strong>：不同專長的 Agents 協作完成複雜任務</li>
+          <li><strong>預測性維護</strong>：在問題發生前識別並修復</li>
+          <li><strong>社區貢獻</strong>：將經驗輸出為可複用的 Skill 模板</li>
+        </ul>
+        <div class="quote-box">
+          願景：一個能自我理解、自我改進、自我維護的 Agent 系統。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 45: 與其他方法的對比 -->
+    <div class="slide" data-slide="45">
+      <span class="slide-number">45/55</span>
+      <h2 class="slide-title">我們的方法 vs 其他方法</h2>
+      <div class="slide-content">
+        <table class="comparison-table">
+          <thead>
+            <tr><th>方法</th><th>側重</th><th>我們的差異</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Meta-Harness</td><td>大規模搜索</td><td>聚焦結構化，適配個人規模</td></tr>
+            <tr><td>Yoyo-Evolve</td><td>全自動</td><td>人機協作，保持控制</td></tr>
+            <tr><td>Hermes</td><td>生態系統</td><td>單系統深度優化</td></tr>
+            <tr><td>12-Factor</td><td>原則指導</td><td>具體工具鏈落地</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Slide 46: 可複用的模式 -->
+    <div class="slide" data-slide="46">
+      <span class="slide-number">46/55</span>
+      <h2 class="slide-title">可複用的模式</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>6 維度評估框架</strong>：結構、文檔、腳本、工作流、引用、安全</li>
+          <li><strong>Autoharness 循環</strong>：基準 → 實驗 → 評估 → 決策</li>
+          <li><strong>Daily Synthesis</strong>：定時整合多源信息生成摘要</li>
+          <li><strong>L0-L3 記憶分層</strong>：摘要 → 索引 → 詳細 → 歸檔</li>
+          <li><strong>P-Tag 時間管理</strong>：按重要性分級保留</li>
+        </ul>
+        <div class="highlight-box">
+          這些模式不依賴特定技術棧，可應用於其他 Agent 系統。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 47: 給其他人的建議 -->
+    <div class="slide" data-slide="47">
+      <span class="slide-number">47/55</span>
+      <h2 class="slide-title">給其他實踐者的建議</h2>
+      <div class="slide-content">
+        <ol>
+          <li><strong>從評估開始</strong>：不要先改，先測量現狀</li>
+          <li><strong>小步快跑</strong>：增量改進優於大爆炸重構</li>
+          <li><strong>機械化優先</strong>：約束比指導更有效</li>
+          <li><strong>保持人工確認</strong>：全自動是目標，不是起點</li>
+          <li><strong>記錄決策</strong>：讓未來的你知道為什麼這樣設計</li>
+          <li><strong>借鑑但不照搬</strong>：理解原理後做適配調整</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Slide 48: 資源與工具 -->
+    <div class="slide" data-slide="48">
+      <span class="slide-number">48/55</span>
+      <h2 class="slide-title">資源與工具</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>Meta-Harness</strong>：https://yoonholee.com/meta-harness/</li>
+          <li><strong>Hermes Agent</strong>：https://github.com/0xNyk/awesome-hermes-agent</li>
+          <li><strong>12-Factor Agents</strong>：humanlayer.com</li>
+          <li><strong>我們的 Skills</strong>：check-harness-env, skill-checker, autoharness, daily-synthesis</li>
+        </ul>
+        <div class="quote-box">
+          我們的實踐代碼已開源在 GitHub，歡迎參考和貢獻。
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 49: 總結 -->
+    <div class="slide" data-slide="49">
+      <span class="slide-number">49/55</span>
+      <h2 class="slide-title">總結：從理論到實踐</h2>
+      <div class="slide-content">
+        <div class="two-column">
+          <div class="column">
+            <h3>我們學到了</h3>
+            <ul>
+              <li>Harness 工程是系統工程</li>
+              <li>約束創造自由</li>
+              <li>評估驅動改進</li>
+              <li>漸進優於激進</li>
+            </ul>
+          </div>
+          <div class="column">
+            <h3>我們做到了</h3>
+            <ul>
+              <li>7 個核心工具技能</li>
+              <li>164 skills 結構化</li>
+              <li>100% memory 覆蓋</li>
+              <li>可量化的健康度</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 50: 感謝 -->
+    <div class="slide" data-slide="50">
+      <span class="slide-number">50/55</span>
+      <h1 class="slide-title" style="text-align: center; margin: auto;">感謝聆聽</h1>
+      <p style="text-align: center; margin-top: 40px; font-size: 22px; color: var(--text-secondary);">
+        Harness Engineering：從理論到實踐的系統演化之路
+      </p>
+      <p style="text-align: center; margin-top: 30px; font-size: 18px; color: var(--text-secondary);">
+        OpenClaw 個人工作區實踐報告<br>
+        2025年3月
+      </p>
+    </div>
+
+    <!-- Slides 51-55: Q&A / 備用 -->
+    <div class="slide" data-slide="51">
+      <span class="slide-number">51/55</span>
+      <h2 class="slide-title">附錄：技能詳情 - check-harness-env</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>功能</strong>：檢查 OpenClaw 工作區是否符合 Harness Engineering 規範</li>
+          <li><strong>檢查項</strong>：語義化路徑、分層聲明、依賴方向、AGENTS.md 規範</li>
+          <li><strong>輸出</strong>：四維度評分 + 具體修復建議</li>
+          <li><strong>位置</strong>：skills/check-harness-env/</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide" data-slide="52">
+      <span class="slide-number">52/55</span>
+      <h2 class="slide-title">附錄：技能詳情 - skill-checker</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>前身</strong>：skill-invocation-check（更名）</li>
+          <li><strong>增強</strong>：lintlang 風格 config linting + hermes-dojo 風格弱點檢測</li>
+          <li><strong>工作流程</strong>：review-description, design-test-cases, diagnose-triggering, full-evaluation</li>
+          <li><strong>位置</strong>：skills/skill-checker/</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide" data-slide="53">
+      <span class="slide-number">53/55</span>
+      <h2 class="slide-title">附錄：技能詳情 - autoharness</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>啟發</strong>：Meta-Harness 論文的「提出-評估-存儲」循環</li>
+          <li><strong>適配</strong>：個人工作區規模，6 維度評分</li>
+          <li><strong>腳本</strong>：run-eval.sh, apply-mutation.sh, rollback.sh</li>
+          <li><strong>位置</strong>：skills/autoharness/</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide" data-slide="54">
+      <span class="slide-number">54/55</span>
+      <h2 class="slide-title">附錄：技能詳情 - daily-synthesis</h2>
+      <div class="slide-content">
+        <ul>
+          <li><strong>啟發</strong>：Yoyo-Evolve 的 daily memory synthesis</li>
+          <li><strong>定時</strong>：每日 06:15（cron）</li>
+          <li><strong>輸入</strong>：memory files + autoharness changelogs + git commits</li>
+          <li><strong>輸出</strong>：memory/active-context.md + Discord embed</li>
+          <li><strong>位置</strong>：skills/daily-synthesis/</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="slide" data-slide="55">
+      <span class="slide-number">55/55</span>
+      <h2 class="slide-title">Q & A</h2>
+      <div class="slide-content">
+        <div style="text-align: center; margin-top: 100px;">
+          <p style="font-size: 28px; color: var(--text-secondary);">歡迎提問與交流</p>
+          <p style="font-size: 20px; color: var(--text-secondary); margin-top: 30px;">
+            Discord: #harness-engineering<br>
+            GitHub: fatfingererr/slides
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination">
+    <div class="dot active"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+  <button class="nav-btn prev">‹</button>
+  <button class="nav-btn next">›</button>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const dots = document.querySelectorAll('.dot');
+      const prevBtn = document.querySelector('.nav-btn.prev');
+      const nextBtn = document.querySelector('.nav-btn.next');
+      let current = 0;
+
+      function showSlide(n) {
+        slides.forEach(s => s.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        slides[n].classList.add('active');
+        dots[n].classList.add('active');
+        current = n;
+      }
+
+      prevBtn.addEventListener('click', () => {
+        current = current > 0 ? current - 1 : slides.length - 1;
+        showSlide(current);
+      });
+
+      nextBtn.addEventListener('click', () => {
+        current = current < slides.length - 1 ? current + 1 : 0;
+        showSlide(current);
+      });
+
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => showSlide(i));
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') prevBtn.click();
+        if (e.key === 'ArrowRight' || e.key === ' ') nextBtn.click();
+      });
+
+      showSlide(0);
+    })();
+  </script>
+</body>
+</html>
